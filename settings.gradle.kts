@@ -1,5 +1,12 @@
 rootProject.name = "hindsight"
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+    }
+}
+
 include(
     "common",
     "policy-service",

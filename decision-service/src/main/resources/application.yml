@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: decision-service
+  datasource:
+    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight}
+    username: ${HINDSIGHT_DB_USER:hindsight}
+    password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+  flyway:
+    schemas: decision
+    default-schema: decision
+    create-schemas: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+server:
+  port: ${SERVER_PORT:8082}

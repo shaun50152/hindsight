@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: policy-service
+  datasource:
+    # Defaults match docker-compose.yml for local dev. Override via env in real deploys.
+    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight}
+    username: ${HINDSIGHT_DB_USER:hindsight}
+    password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+  flyway:
+    schemas: policy
+    default-schema: policy
+    create-schemas: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+server:
+  port: ${SERVER_PORT:8081}

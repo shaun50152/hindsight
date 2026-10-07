@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: simulation-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+server:
+  port: ${SERVER_PORT:8084}
