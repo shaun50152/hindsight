@@ -1,0 +1,31 @@
+---
+description: Hindsight project rules
+alwaysApply: true
+---
+
+# Hindsight: project rules
+
+Source of truth for scope and design: docs/HINDSIGHT_BUILD_SPEC.md. Read the relevant section before coding. Do not add features outside the spec without asking.
+
+## Stack
+Java 21, Spring Boot 4.1.x, Gradle 9.x Kotlin DSL multi-module, Kafka, Postgres (Flyway), Redis, CEL (cel-java), Testcontainers, JUnit 5, Mockito, jqwik.
+
+## Hard rules
+- The decision evaluation function is PURE and deterministic. No clocks, randomness, or I/O inside evaluation. Time arrives via the input snapshot.
+- Approved policy versions are immutable. Identity is the SHA-256 of canonical JSON.
+- Every Kafka consumer is idempotent. Producers use the transactional outbox.
+- Audit log is append-only and hash-chained. App DB role has INSERT and SELECT only on audit tables.
+- Never use hashCode() for anything persisted or routed. Use a stable SHA-256 based function.
+- No secrets in code, config, Helm values, or Terraform. Use env vars and K8s Secrets.
+- Containers run non-root, read-only root filesystem, arbitrary UID safe.
+- All data is synthetic. Never claim regulatory compliance in code or docs.
+
+## Workflow
+- Work on ONE phase or task at a time. Plan first, list files you will touch, then implement.
+- Every change includes tests in the same change. Money-of-the-system logic (evaluation, hashing, bucketing, state machine) also gets jqwik property tests.
+- Run the tests after changes and fix failures before moving on. Do not disable or weaken tests to make them pass.
+- Do NOT run git commit or git push yourself. The developer commits manually from the terminal. Never add Co-authored-by or any attribution trailers to commit messages.
+- Small, focused changes. Suggest a conventional commit message (feat:, fix:, test:, refactor:, docs:, chore:) at the end of each task so the developer can use it.
+- When you hit a real bug, add an entry to docs/bugs.md (symptom, root cause, fix).
+- Prefer simple, readable code over clever code. Comments explain WHY, not WHAT.
+- If something in the spec is ambiguous or seems wrong, stop and ask instead of guessing.

@@ -1,0 +1,26 @@
+# Gradle / Java
+.gradle/
+build/
+out/
+*.class
+*.log
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+# Node
+node_modules/
+dist/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+# Misc
+tmp/
