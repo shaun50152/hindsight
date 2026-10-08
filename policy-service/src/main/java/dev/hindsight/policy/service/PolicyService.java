@@ -4,8 +4,8 @@ import dev.hindsight.policy.lifecycle.InvalidPolicyTransitionException;
 import dev.hindsight.policy.lifecycle.PolicyLifecycleStateMachine;
 import dev.hindsight.policy.lifecycle.PolicyStatus;
 import dev.hindsight.policy.lifecycle.PolicyTransition;
+import dev.hindsight.common.events.PolicyLifecycleEvent;
 import dev.hindsight.policy.messaging.OutboxWriter;
-import dev.hindsight.policy.messaging.PolicyLifecycleEvent;
 import dev.hindsight.policy.persistence.PolicyEventRepository;
 import dev.hindsight.policy.persistence.PolicyRecord;
 import dev.hindsight.policy.persistence.PolicyRepository;
@@ -226,10 +226,12 @@ public class PolicyService {
                 record.policyId(),
                 record.version(),
                 record.contentHash(),
-                record.status(),
+                record.status().name(),
                 record.canaryPct().orElse(null),
                 actor,
-                occurredAt));
+                occurredAt,
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
+                record.yaml()));
     }
 
     private void recordEvent(String policyId, int version, String eventType, String actorId, String detailsJson) {

@@ -2,13 +2,37 @@ spring:
   application:
     name: decision-service
   datasource:
-    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight}
+    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=decision}
     username: ${HINDSIGHT_DB_USER:hindsight}
     password: ${HINDSIGHT_DB_PASSWORD:hindsight}
   flyway:
     schemas: decision
     default-schema: decision
     create-schemas: true
+  kafka:
+    bootstrap-servers: ${HINDSIGHT_KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: ${HINDSIGHT_DECISION_CONSUMER_GROUP:decision-service}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+hindsight:
+  jwt:
+    hmac-secret: ${HINDSIGHT_JWT_SECRET:}
+  kafka:
+    enabled: true
+  outbox:
+    relay-enabled: true
+    relay-interval-ms: 500
+    batch-size: 50
+  decision:
+    default-policy-id: ${HINDSIGHT_DEFAULT_POLICY_ID:credit-line-increase}
+  policy-cache:
+    bootstrap-timeout-ms: 30000
 
 management:
   endpoints:

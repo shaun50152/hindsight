@@ -2,6 +2,7 @@ package dev.hindsight.policy.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.hindsight.common.events.PolicyLifecycleEvent;
 import dev.hindsight.policy.testsupport.PostgresTestSupport;
 import dev.hindsight.policy.testsupport.TestPolicyYaml;
 import java.time.Duration;
@@ -21,10 +22,13 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @Testcontainers
 class OutboxRelayIT {
+
+    private static final JsonMapper JSON = JsonMapper.builder().build();
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16");
@@ -64,7 +68,7 @@ class OutboxRelayIT {
             outboxRelay.relay();
             var records = KafkaTestUtils.getRecords(consumer, Duration.ofMillis(500));
             for (var record : records) {
-                if (policyId.equals(record.key())) {
+                if (PolicyLifecycleEvent.messageKey(policyId, 1).equals(record.key())) {
                     match = record;
                     break;
                 }
@@ -74,6 +78,11 @@ class OutboxRelayIT {
         consumer.close();
 
         assertThat(match).isNotNull();
-        assertThat(match.value()).contains(policyId);
+        PolicyLifecycleEvent event = JSON.readValue(match.value(), PolicyLifecycleEvent.class);
+        assertThat(event.policyId()).isEqualTo(policyId);
+        assertThat(event.version()).isEqualTo(1);
+        assertThat(event.yaml()).isNotBlank();
+        assertThat(event.schemaVersion()).isEqualTo(PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION);
+        assertThat(event.contentHash()).isNotBlank();
     }
 }

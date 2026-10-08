@@ -2,13 +2,32 @@ spring:
   application:
     name: audit-service
   datasource:
-    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight}
+    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=audit}
     username: ${HINDSIGHT_DB_USER:hindsight}
     password: ${HINDSIGHT_DB_PASSWORD:hindsight}
   flyway:
     schemas: audit
     default-schema: audit
     create-schemas: true
+  kafka:
+    bootstrap-servers: ${HINDSIGHT_KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: ${HINDSIGHT_AUDIT_CONSUMER_GROUP:audit-service}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      concurrency: 1
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+hindsight:
+  jwt:
+    hmac-secret: ${HINDSIGHT_JWT_SECRET:}
+  audit:
+    chain-id: ${HINDSIGHT_AUDIT_CHAIN_ID:main}
+    checkpoint-interval: ${HINDSIGHT_AUDIT_CHECKPOINT_INTERVAL:100}
 
 management:
   endpoints:

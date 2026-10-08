@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Policy lifecycle changes must be published to Kafka (`policy.lifecycle`, compacted, key = `policyId`) without dual-write races between Postgres and the broker.
+Policy lifecycle changes must be published to Kafka (`policy.lifecycle`, compacted, key = `policyId:version`) without dual-write races between Postgres and the broker.
 
 ## Decision
 

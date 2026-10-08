@@ -1,5 +1,6 @@
 package dev.hindsight.policy.messaging;
 
+import dev.hindsight.common.events.PolicyLifecycleEvent;
 import dev.hindsight.policy.persistence.OutboxRepository;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -21,7 +22,8 @@ public class OutboxWriter {
     public void enqueueLifecycleEvent(PolicyLifecycleEvent event) {
         try {
             String payload = JSON.writeValueAsString(event);
-            outboxRepository.insert(POLICY_LIFECYCLE_TOPIC, event.policyId(), payload);
+            String key = PolicyLifecycleEvent.messageKey(event.policyId(), event.version());
+            outboxRepository.insert(POLICY_LIFECYCLE_TOPIC, key, payload);
         } catch (JacksonException e) {
             throw new IllegalStateException("Failed to serialize lifecycle event", e);
         }
