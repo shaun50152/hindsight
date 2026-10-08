@@ -4,6 +4,7 @@ import dev.hindsight.policy.api.dto.CreateDraftRequest;
 import dev.hindsight.policy.api.dto.PolicyVersionResponse;
 import dev.hindsight.policy.api.dto.PolicyVersionSummaryResponse;
 import dev.hindsight.policy.api.dto.PromoteRequest;
+import dev.hindsight.policy.api.dto.RollbackRequest;
 import dev.hindsight.policy.api.dto.RuleDiffResponse;
 import dev.hindsight.policy.persistence.PolicyRecord;
 import dev.hindsight.policy.security.PolicyRoles;
@@ -82,8 +83,12 @@ public class PolicyController {
     @PostMapping("/{policyId}/versions/{version}/rollback")
     @PreAuthorize("hasRole('" + PolicyRoles.OPS + "')")
     PolicyVersionResponse rollback(
-            @PathVariable String policyId, @PathVariable int version, @AuthenticationPrincipal Jwt jwt) {
-        return mapper.toResponse(policyService.rollback(policyId, version, subject(jwt)), true);
+            @PathVariable String policyId,
+            @PathVariable int version,
+            @RequestBody(required = false) RollbackRequest body,
+            @AuthenticationPrincipal Jwt jwt) {
+        String reason = body != null ? body.reason() : null;
+        return mapper.toResponse(policyService.rollback(policyId, version, subject(jwt), reason), true);
     }
 
     @GetMapping("/{policyId}/versions")

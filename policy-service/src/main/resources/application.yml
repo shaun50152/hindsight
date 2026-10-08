@@ -6,6 +6,7 @@ spring:
     username: ${HINDSIGHT_DB_USER:hindsight}
     password: ${HINDSIGHT_DB_PASSWORD:hindsight}
   flyway:
+    locations: classpath:policy/flyway
     schemas: policy
     default-schema: policy
     create-schemas: true

@@ -15,7 +15,17 @@ public record DecisionMadePayload(
         List<String> reasonCodes,
         BigDecimal maxIncrease,
         List<RuleTraceEntry> rulesEvaluated,
-        ApplicantSnapshotPayload applicant) {
+        ApplicantSnapshotPayload applicant,
+        Integer schemaVersion,
+        Long latencyMs,
+        VersionRole versionRole) {
+
+    public static final int CURRENT_SCHEMA_VERSION = 2;
+
+    /** Schema version when {@code schemaVersion} was omitted (legacy payloads). */
+    public int schemaVersionOrDefault() {
+        return schemaVersion != null ? schemaVersion : 1;
+    }
 
     public record RuleTraceEntry(String ruleId, boolean whenResult) {}
 

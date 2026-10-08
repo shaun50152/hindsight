@@ -14,5 +14,6 @@ include(
     "decision-service",
     "audit-service",
     "simulation-service",
-    "backtest-worker"
+    "backtest-worker",
+    "synth-data"
 )

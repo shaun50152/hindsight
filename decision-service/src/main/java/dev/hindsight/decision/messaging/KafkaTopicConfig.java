@@ -26,4 +26,12 @@ public class KafkaTopicConfig {
                 .replicas(1)
                 .build();
     }
+
+    @Bean
+    NewTopic decisionShadowTopic() {
+        return TopicBuilder.name(DecisionTopics.DECISION_SHADOW)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
 }

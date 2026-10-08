@@ -34,14 +34,14 @@ class CanaryRoutingProperties {
         CanaryRouter highRouter = new CanaryRouter(high);
         var atLow = lowRouter.select("p", customerId);
         var atHigh = highRouter.select("p", customerId);
-        if (atLow.version() == 2) {
+        if (atLow.policy().version() == 2) {
             assertSameVersion(atLow, atHigh);
         }
     }
 
-    private static void assertSameVersion(RoutedPolicy a, RoutedPolicy b) {
-        org.assertj.core.api.Assertions.assertThat(a.version()).isEqualTo(b.version());
-        org.assertj.core.api.Assertions.assertThat(a.contentHash()).isEqualTo(b.contentHash());
+    private static void assertSameVersion(RoutingResult a, RoutingResult b) {
+        org.assertj.core.api.Assertions.assertThat(a.policy().version()).isEqualTo(b.policy().version());
+        org.assertj.core.api.Assertions.assertThat(a.policy().contentHash()).isEqualTo(b.policy().contentHash());
     }
 
     private static PolicyCache cacheWithCanary(int pct) {

@@ -101,7 +101,10 @@ class AuditReplayRetiredPolicyIT extends IntegrationTestBase {
                         applicant.incomeBand(),
                         applicant.incomeVerified(),
                         applicant.segment(),
-                        applicant.asOf()));
+                        applicant.asOf()),
+                null,
+                null,
+                null);
         kafkaTemplate
                 .send(
                         "decision.made",

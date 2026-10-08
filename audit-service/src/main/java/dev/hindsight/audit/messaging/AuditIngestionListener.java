@@ -1,6 +1,7 @@
 package dev.hindsight.audit.messaging;
 
 import dev.hindsight.audit.chain.AuditAppender;
+import dev.hindsight.common.events.DecisionShadowPayload;
 import dev.hindsight.common.events.EventEnvelope;
 import dev.hindsight.common.events.PolicyLifecycleEvent;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -19,12 +20,22 @@ public class AuditIngestionListener {
         this.auditAppender = auditAppender;
     }
 
-    @KafkaListener(topics = {AuditTopics.DECISION_MADE, AuditTopics.POLICY_LIFECYCLE}, concurrency = "1")
+    @KafkaListener(
+            topics = {AuditTopics.DECISION_MADE, AuditTopics.DECISION_SHADOW, AuditTopics.POLICY_LIFECYCLE},
+            concurrency = "1")
     void onMessage(String raw) throws Exception {
         JsonNode root = JSON.readTree(raw);
         if (root.has("eventId") && root.has("type")) {
             EventEnvelope envelope = JSON.treeToValue(root, EventEnvelope.class);
-            auditAppender.append(envelope.eventId(), envelope.type(), envelope.payload());
+            String eventId = envelope.eventId();
+            if (AuditTopics.DECISION_SHADOW.equals(envelope.type())) {
+                DecisionShadowPayload shadow = JSON.treeToValue(envelope.payload(), DecisionShadowPayload.class);
+                eventId = "decision.shadow:"
+                        + shadow.originalDecisionId()
+                        + ":"
+                        + shadow.shadowContentHash();
+            }
+            auditAppender.append(eventId, envelope.type(), envelope.payload());
         } else {
             PolicyLifecycleEvent event = JSON.treeToValue(root, PolicyLifecycleEvent.class);
             String eventId = "policy.lifecycle:"

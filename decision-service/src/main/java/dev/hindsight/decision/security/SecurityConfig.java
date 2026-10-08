@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
-@Profile("!integration")
+@Profile("!integration & !shadow")
 public class SecurityConfig {
 
     @Bean

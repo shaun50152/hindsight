@@ -96,7 +96,10 @@ class AuditReplayIT extends IntegrationTestBase {
                         applicant.incomeBand(),
                         applicant.incomeVerified(),
                         applicant.segment(),
-                        applicant.asOf()));
+                        applicant.asOf()),
+                null,
+                null,
+                null);
         EventEnvelope envelope = new EventEnvelope(
                 "replay-evt-1", "decision.made", applicant.asOf(), "req-r1", JSON.valueToTree(payload));
         kafkaTemplate.send("decision.made", "c1", JSON.writeValueAsString(envelope)).get();

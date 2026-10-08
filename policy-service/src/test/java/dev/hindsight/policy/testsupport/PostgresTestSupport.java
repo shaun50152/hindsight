@@ -13,5 +13,7 @@ public final class PostgresTestSupport {
                 () -> postgres.getJdbcUrl() + (postgres.getJdbcUrl().contains("?") ? "&" : "?") + "currentSchema=policy");
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.flyway.locations", () -> "classpath:policy/flyway");
+        registry.add("spring.flyway.repair-on-migrate", () -> "true");
     }
 }

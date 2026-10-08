@@ -9,6 +9,7 @@ import dev.hindsight.policyengine.model.Policy;
 import dev.hindsight.policyengine.yaml.PolicyYamlParser;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,26 @@ public class PolicyCache {
         return new PolicyRoute(active, canary);
     }
 
+    public Optional<RoutedPolicy> shadowFor(String policyId) {
+        Map<Integer, VersionView> versions = versionsByPolicy.get(policyId);
+        if (versions == null || versions.isEmpty()) {
+            return Optional.empty();
+        }
+        for (var entry : versions.entrySet()) {
+            VersionView view = entry.getValue();
+            if (!"SHADOW".equals(view.status())) {
+                continue;
+            }
+            CompiledPolicy compiled = compiledByHash.get(view.contentHash());
+            if (compiled == null) {
+                continue;
+            }
+            return Optional.of(new RoutedPolicy(
+                    policyId, entry.getKey(), view.contentHash(), compiled, view.canaryPct()));
+        }
+        return Optional.empty();
+    }
+
     public Optional<RoutedPolicy> findVersion(String policyId, int version) {
         Map<Integer, VersionView> versions = versionsByPolicy.get(policyId);
         if (versions == null) {
@@ -93,6 +114,10 @@ public class PolicyCache {
 
     public String activeContentHash(String policyId) {
         return routeFor(policyId).active().map(RoutedPolicy::contentHash).orElse(null);
+    }
+
+    public Set<String> policyIds() {
+        return Set.copyOf(versionsByPolicy.keySet());
     }
 
     private CompiledPolicy compileAndVerify(PolicyLifecycleEvent event) {

@@ -20,6 +20,22 @@ public final class TestPolicyYaml {
                 .formatted(policyId, version);
     }
 
+    public static String declineEveryone(String policyId, int version) {
+        return """
+                policyId: %s
+                version: %d
+                description: bad canary
+                inputs: applicant
+                defaultOutcome: DECLINE
+                rules:
+                  - id: R-decline-all
+                    when: "applicant.ficoBand >= 0"
+                    outcome: DECLINE
+                    reason: RC_DELINQ
+                """
+                .formatted(policyId, version);
+    }
+
     public static String canaryMarker(String policyId, int version) {
         return """
                 policyId: %s

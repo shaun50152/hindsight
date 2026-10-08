@@ -1,0 +1,14 @@
+spring:
+  main:
+    web-application-type: none
+  kafka:
+    consumer:
+      group-id: decision-service-shadow
+
+hindsight:
+  shadow:
+    simulate-crash: false
+  guardrail:
+    enabled: false
+  outbox:
+    relay-enabled: true

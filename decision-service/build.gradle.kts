@@ -28,6 +28,9 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation(libs.spring.boot.starter.kafka.test)
     testImplementation("org.awaitility:awaitility:4.2.2")
+    testImplementation(project(":policy-service"))
+    testImplementation(project(":audit-service"))
+    testRuntimeOnly(libs.flyway.database.postgresql)
 }
 
 tasks.test {

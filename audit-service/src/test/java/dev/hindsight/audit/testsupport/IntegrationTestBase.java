@@ -16,5 +16,7 @@ public abstract class IntegrationTestBase {
         registry.add("spring.datasource.password", SharedTestcontainers.POSTGRES::getPassword);
         registry.add("spring.kafka.bootstrap-servers", SharedTestcontainers.KAFKA::getBootstrapServers);
         registry.add("hindsight.jwt.hmac-secret", () -> "test-jwt-hmac-secret-32bytes-min!!");
+        registry.add("spring.flyway.locations", () -> "classpath:audit/flyway");
+        registry.add("spring.flyway.repair-on-migrate", () -> "true");
     }
 }

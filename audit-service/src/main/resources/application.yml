@@ -6,6 +6,7 @@ spring:
     username: ${HINDSIGHT_DB_USER:hindsight}
     password: ${HINDSIGHT_DB_PASSWORD:hindsight}
   flyway:
+    locations: classpath:audit/flyway
     schemas: audit
     default-schema: audit
     create-schemas: true

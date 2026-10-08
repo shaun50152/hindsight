@@ -137,6 +137,11 @@ public class PolicyService {
 
     @Transactional
     public PolicyRecord rollback(String policyId, int version, String actorId) {
+        return rollback(policyId, version, actorId, null);
+    }
+
+    @Transactional
+    public PolicyRecord rollback(String policyId, int version, String actorId, String reason) {
         PolicyRecord current = load(policyId, version);
         if (current.status() != PolicyStatus.SHADOW
                 && current.status() != PolicyStatus.CANARY
@@ -145,7 +150,13 @@ public class PolicyService {
         }
         PolicyStatus previousStatus = current.status();
         PolicyStatus next = transition(current.status(), PolicyTransition.ROLLBACK);
-        applyTransition(current, next, actorId, Optional.empty(), Optional.empty(), "ROLLED_BACK", null);
+        String detailsJson = null;
+        if (reason != null && !reason.isBlank()) {
+            detailsJson = JSON.writeValueAsString(JSON.createObjectNode()
+                    .put("reason", reason)
+                    .put("source", "guardrail"));
+        }
+        applyTransition(current, next, actorId, Optional.empty(), Optional.empty(), "ROLLED_BACK", detailsJson);
         if (previousStatus == PolicyStatus.ACTIVE) {
             restorePreviousActive(policyId, version);
         }
