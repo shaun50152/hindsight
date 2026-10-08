@@ -61,8 +61,9 @@ class CanaryRoutingProperties {
                 "ACTIVE",
                 null,
                 "ops",
+                null,
                 Instant.now(),
-                1,
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 yaml));
     }
 
@@ -76,8 +77,9 @@ class CanaryRoutingProperties {
                 "CANARY",
                 pct,
                 "ops",
+                null,
                 Instant.now(),
-                1,
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 yaml));
     }
 }

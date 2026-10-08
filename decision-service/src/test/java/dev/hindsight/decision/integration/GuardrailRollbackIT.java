@@ -19,6 +19,7 @@ import dev.hindsight.policy.lifecycle.PolicyStatus;
 import dev.hindsight.policy.service.PolicyService;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -88,8 +89,12 @@ class GuardrailRollbackIT extends IntegrationTestBase {
         SidecarApplications.relayPolicyOutbox();
 
         org.awaitility.Awaitility.await()
-                .atMost(Duration.ofSeconds(20))
-                .until(() -> hashV1.equals(policyCache.activeContentHash(policyId)));
+                .atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(200))
+                .until(() -> {
+                    SidecarApplications.relayPolicyOutbox();
+                    return hashV1.equals(policyCache.activeContentHash(policyId));
+                });
 
         policyService.createDraft(policyId, yamlV2, "maker-2");
         policyService.submit(policyId, 2, "maker-2");
@@ -134,9 +139,12 @@ class GuardrailRollbackIT extends IntegrationTestBase {
                                     WHERE event_type = 'policy.lifecycle'
                                       AND payload->>'policyId' = ?
                                       AND payload->>'status' = 'RETIRED'
+                                      AND payload->>'actor' = ?
+                                      AND payload->>'reason' LIKE 'Guardrail breach:%'
                                     """,
                                     Integer.class,
-                                    policyId);
+                                    policyId,
+                                    TestJwt.GUARDRAIL_SERVICE_SUBJECT);
                     return lifecycleRetired != null && lifecycleRetired > 0;
                 });
 
@@ -158,6 +166,14 @@ class GuardrailRollbackIT extends IntegrationTestBase {
         policyService.approve(policyId, 2, "checker-2");
         promoteToCanary(policyService, policyId, 2, 100, "ops-1");
         SidecarApplications.relayPolicyOutbox();
+
+        org.awaitility.Awaitility.await()
+                .atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(200))
+                .until(() -> {
+                    SidecarApplications.relayPolicyOutbox();
+                    return policyCache.activeContentHash(policyId) != null;
+                });
 
         postDecision(policyId, "cust-min", "req-min");
         outboxRelay.relay();
@@ -203,13 +219,33 @@ class GuardrailRollbackIT extends IntegrationTestBase {
 
     private static void promoteToActive(PolicyService policyService, String policyId, int version, String actor) {
         policyService.promote(policyId, version, PolicyStatus.SHADOW, null, actor);
+        seedCompleteBacktestReport(policyId, version);
         policyService.promote(policyId, version, PolicyStatus.CANARY, 100, actor);
         policyService.promote(policyId, version, PolicyStatus.ACTIVE, null, actor);
     }
 
     private static void promoteToCanary(PolicyService policyService, String policyId, int version, int pct, String actor) {
         policyService.promote(policyId, version, PolicyStatus.SHADOW, null, actor);
+        seedCompleteBacktestReport(policyId, version);
         policyService.promote(policyId, version, PolicyStatus.CANARY, pct, actor);
+    }
+
+    private static void seedCompleteBacktestReport(String policyId, int version) {
+        String contentHash = SidecarApplications.policyJdbc()
+                .queryForObject(
+                        "SELECT content_hash FROM policies WHERE policy_id = ? AND version = ?",
+                        String.class,
+                        policyId,
+                        version);
+        SidecarApplications.policyJdbc()
+                .update(
+                        """
+                        INSERT INTO backtest_reports (content_hash, backtest_id, status, summary)
+                        VALUES (?, ?::uuid, 'COMPLETE', '{}'::jsonb)
+                        ON CONFLICT (content_hash) DO UPDATE SET status = 'COMPLETE'
+                        """,
+                        contentHash,
+                        UUID.randomUUID());
     }
 
     private JsonNode postDecision(String policyId, String customerId, String requestId) throws Exception {

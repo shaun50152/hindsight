@@ -13,11 +13,12 @@ public record PolicyLifecycleEvent(
         String status,
         Integer canaryPct,
         String actor,
+        String reason,
         Instant occurredAt,
         int schemaVersion,
         String yaml) {
 
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
 
     public static String messageKey(String policyId, int version) {
         return policyId + ":" + version;

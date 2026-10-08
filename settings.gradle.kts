@@ -9,6 +9,7 @@ dependencyResolutionManagement {
 
 include(
     "common",
+    "backtest-lib",
     "policy-engine",
     "policy-service",
     "decision-service",

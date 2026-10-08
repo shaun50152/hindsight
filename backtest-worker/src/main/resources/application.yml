@@ -1,15 +1,29 @@
 spring:
   application:
     name: backtest-worker
+  main:
+    web-application-type: none
+  datasource:
+    url: ${HINDSIGHT_SIMULATION_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=simulation}
+    username: ${HINDSIGHT_DB_USER:hindsight}
+    password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${HINDSIGHT_KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      group-id: backtest-worker-${BACKTEST_ID:local}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: when_authorized
-
-server:
-  port: ${SERVER_PORT:8085}
+hindsight:
+  backtest:
+    backtest-id: ${BACKTEST_ID:}
+    shard-index: ${JOB_COMPLETION_INDEX:${HINDSIGHT_BACKTEST_SHARD_INDEX:0}}
+    candidate-content-hash: ${CANDIDATE_CONTENT_HASH:}
+    policy-datasource:
+      url: ${HINDSIGHT_POLICY_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=policy}
+      username: ${HINDSIGHT_DB_USER:hindsight}
+      password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+    decision-topic: decision.made
+    sampling-stride: ${SAMPLING_STRIDE:1}

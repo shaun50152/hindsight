@@ -75,7 +75,16 @@ class AuditReplayRetiredPolicyIT extends IntegrationTestBase {
         Decision decision = PolicyEvaluator.evaluate(compiled, applicant);
 
         PolicyLifecycleEvent lifecycle = new PolicyLifecycleEvent(
-                "retired-p", 3, hash, "RETIRED", null, "ops", Instant.now(), 1, yaml);
+                "retired-p",
+                3,
+                hash,
+                "RETIRED",
+                null,
+                "ops",
+                null,
+                Instant.now(),
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
+                yaml);
         kafkaTemplate
                 .send("policy.lifecycle", PolicyLifecycleEvent.messageKey("retired-p", 3), JSON.writeValueAsString(lifecycle))
                 .get();

@@ -6,6 +6,7 @@ jqwik = "1.9.3"
 cel = "0.14.0"
 protobuf = "4.29.3"
 protobuf-plugin = "0.9.4"
+fabric8 = "7.3.1"
 
 [libraries]
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
@@ -32,6 +33,8 @@ postgresql = { module = "org.postgresql:postgresql" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 testcontainers-kafka = { module = "org.testcontainers:testcontainers-kafka" }
+fabric8-kubernetes-client = { module = "io.fabric8:kubernetes-client", version.ref = "fabric8" }
+fabric8-kubernetes-server-mock = { module = "io.fabric8:kubernetes-server-mock", version.ref = "fabric8" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

@@ -70,7 +70,16 @@ class AuditReplayIT extends IntegrationTestBase {
         Decision decision = PolicyEvaluator.evaluate(compiled, applicant);
 
         PolicyLifecycleEvent lifecycle = new PolicyLifecycleEvent(
-                "replay-p", 1, hash, "ACTIVE", null, "ops", Instant.now(), 1, yaml);
+                "replay-p",
+                1,
+                hash,
+                "ACTIVE",
+                null,
+                "ops",
+                null,
+                Instant.now(),
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
+                yaml);
         kafkaTemplate
                 .send("policy.lifecycle", PolicyLifecycleEvent.messageKey("replay-p", 1), JSON.writeValueAsString(lifecycle))
                 .get();

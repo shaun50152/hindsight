@@ -1,6 +1,49 @@
 spring:
   application:
     name: simulation-service
+  datasource:
+    url: ${HINDSIGHT_SIMULATION_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=simulation}
+    username: ${HINDSIGHT_DB_USER:hindsight}
+    password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+  flyway:
+    locations: classpath:simulation/flyway
+    schemas: simulation
+    default-schema: simulation
+    create-schemas: true
+  kafka:
+    bootstrap-servers: ${HINDSIGHT_KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: simulation-service
+
+hindsight:
+  jwt:
+    hmac-secret: ${HINDSIGHT_JWT_SECRET:}
+  kafka:
+    enabled: true
+  outbox:
+    relay-enabled: true
+    relay-interval-ms: 1000
+    batch-size: 50
+  backtest:
+    runner: ${HINDSIGHT_BACKTEST_RUNNER:local}
+    shard-count: ${HINDSIGHT_BACKTEST_SHARD_COUNT:2}
+    decision-topic: decision.made
+    policy-datasource:
+      url: ${HINDSIGHT_POLICY_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=policy}
+      username: ${HINDSIGHT_DB_USER:hindsight}
+      password: ${HINDSIGHT_DB_PASSWORD:hindsight}
+    kubernetes:
+      namespace: ${HINDSIGHT_BACKTEST_NAMESPACE:hindsight}
+      worker-image: ${HINDSIGHT_BACKTEST_WORKER_IMAGE:hindsight/backtest-worker:latest}
+      service-account-name: ${HINDSIGHT_BACKTEST_SERVICE_ACCOUNT:backtest-worker}
+      ttl-seconds-after-finished: 300
+      backoff-limit: 1
+      cpu-request: 100m
+      cpu-limit: 500m
+      memory-request: 256Mi
+      memory-limit: 512Mi
+    watcher:
+      poll-interval-ms: 2000
 
 management:
   endpoints:

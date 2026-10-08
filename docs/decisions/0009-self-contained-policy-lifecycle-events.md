@@ -10,7 +10,8 @@ Decision-service and audit-service must compile and replay policies without call
 
 ## Decision
 
-- Publish **full policy YAML** on every lifecycle event for a version, plus `schemaVersion` (currently `1`).
+- Publish **full policy YAML** on every lifecycle event for a version, plus `schemaVersion` (currently `2`).
+- Schema v2 adds optional `reason` (set on rollback, e.g. guardrail trips). v1 payloads omit `reason`; consumers treat it as null.
 - Use Kafka message key **`{policyId}:{version}`** so compaction retains the latest state per version independently.
 - Shared DTO: `dev.hindsight.common.events.PolicyLifecycleEvent` with required `yaml` on publish.
 - Consumers compile YAML, verify `contentHash` matches `PolicyContentHash`, and refuse to load on mismatch.

@@ -56,8 +56,9 @@ class AuditIngestionIT extends IntegrationTestBase {
                 "ACTIVE",
                 null,
                 "ops",
+                null,
                 Instant.now(),
-                1,
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 yaml);
         kafkaTemplate
                 .send("policy.lifecycle", PolicyLifecycleEvent.messageKey("p1", 1), JSON.writeValueAsString(lifecycle))

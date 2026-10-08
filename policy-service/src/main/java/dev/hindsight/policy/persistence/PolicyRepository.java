@@ -65,6 +65,12 @@ public class PolicyRepository {
                 policyId);
     }
 
+    public Optional<PolicyRecord> findByContentHash(String contentHash) {
+        List<PolicyRecord> rows = jdbc.query(
+                "SELECT * FROM policies WHERE content_hash = ? LIMIT 1", ROW_MAPPER, contentHash);
+        return rows.stream().findFirst();
+    }
+
     public Optional<PolicyRecord> findActive(String policyId) {
         List<PolicyRecord> rows = jdbc.query(
                 """

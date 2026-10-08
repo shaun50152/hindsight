@@ -40,6 +40,7 @@ class OutboxRelayIT {
     static void props(DynamicPropertyRegistry registry) {
         PostgresTestSupport.registerPolicySchema(postgres, registry);
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.consumer.group-id", () -> "policy-service-outbox-it");
         registry.add("hindsight.jwt.hmac-secret", () -> "test-jwt-hmac-secret-32bytes-min!!");
         registry.add("hindsight.kafka.enabled", () -> "true");
         registry.add("hindsight.outbox.relay-enabled", () -> "true");

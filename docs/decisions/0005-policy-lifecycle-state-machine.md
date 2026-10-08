@@ -18,5 +18,7 @@ Policy versions move through maker-checker approval and controlled promotion (sh
 
 ## Consequences
 
+- Promotion to CANARY or ACTIVE is additionally gated on a COMPLETE backtest report for the version content hash (see ADR 0013). SHADOW promotion is unchanged.
+
 - REST and service layers share one transition table; exhaustive tests cover the full matrix.
 - Rollback semantics depend on promotion audit details, not ad hoc version scans.

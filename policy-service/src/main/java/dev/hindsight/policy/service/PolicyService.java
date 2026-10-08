@@ -6,6 +6,7 @@ import dev.hindsight.policy.lifecycle.PolicyStatus;
 import dev.hindsight.policy.lifecycle.PolicyTransition;
 import dev.hindsight.common.events.PolicyLifecycleEvent;
 import dev.hindsight.policy.messaging.OutboxWriter;
+import dev.hindsight.policy.persistence.BacktestReportRepository;
 import dev.hindsight.policy.persistence.PolicyEventRepository;
 import dev.hindsight.policy.persistence.PolicyRecord;
 import dev.hindsight.policy.persistence.PolicyRepository;
@@ -31,14 +32,17 @@ public class PolicyService {
 
     private final PolicyRepository policyRepository;
     private final PolicyEventRepository policyEventRepository;
+    private final BacktestReportRepository backtestReportRepository;
     private final OutboxWriter outboxWriter;
 
     public PolicyService(
             PolicyRepository policyRepository,
             PolicyEventRepository policyEventRepository,
+            BacktestReportRepository backtestReportRepository,
             OutboxWriter outboxWriter) {
         this.policyRepository = policyRepository;
         this.policyEventRepository = policyEventRepository;
+        this.backtestReportRepository = backtestReportRepository;
         this.outboxWriter = outboxWriter;
     }
 
@@ -61,7 +65,7 @@ public class PolicyService {
                 Optional.empty());
         policyRepository.insert(record);
         recordEvent(policyId, version, "DRAFT_CREATED", authorId, null);
-        emitLifecycle(record, authorId, now);
+        emitLifecycle(record, authorId, now, null);
         return record;
     }
 
@@ -117,6 +121,15 @@ public class PolicyService {
     public PolicyRecord promote(String policyId, int version, PolicyStatus target, Integer canaryPct, String actorId) {
         PolicyRecord current = load(policyId, version);
         PolicyTransition action = promoteAction(target);
+        if (target == PolicyStatus.CANARY || target == PolicyStatus.ACTIVE) {
+            if (!backtestReportRepository.hasCompleteReport(current.contentHash())) {
+                throw new PolicyConflictException(
+                        "Promotion to "
+                                + target
+                                + " requires a COMPLETE backtest report for contentHash "
+                                + current.contentHash());
+            }
+        }
         if (target == PolicyStatus.CANARY && (canaryPct == null || canaryPct < 1 || canaryPct > 100)) {
             throw new PolicyConflictException("canaryPct required (1-100) when promoting to CANARY");
         }
@@ -156,7 +169,9 @@ public class PolicyService {
                     .put("reason", reason)
                     .put("source", "guardrail"));
         }
-        applyTransition(current, next, actorId, Optional.empty(), Optional.empty(), "ROLLED_BACK", detailsJson);
+        String lifecycleReason = reason != null && !reason.isBlank() ? reason : null;
+        applyTransition(
+                current, next, actorId, Optional.empty(), Optional.empty(), "ROLLED_BACK", detailsJson, lifecycleReason);
         if (previousStatus == PolicyStatus.ACTIVE) {
             restorePreviousActive(policyId, version);
         }
@@ -205,7 +220,7 @@ public class PolicyService {
         Instant now = Instant.now();
         PolicyRecord restored = load(policyId, prevVersion);
         recordEvent(policyId, prevVersion, "RESTORED_ACTIVE", "system", null);
-        emitLifecycle(restored, "system", now);
+        emitLifecycle(restored, "system", now, null);
     }
 
     private void applyTransition(
@@ -216,6 +231,18 @@ public class PolicyService {
             Optional<Integer> canaryPct,
             String eventType,
             String detailsJson) {
+        applyTransition(current, next, actorId, approverId, canaryPct, eventType, detailsJson, null);
+    }
+
+    private void applyTransition(
+            PolicyRecord current,
+            PolicyStatus next,
+            String actorId,
+            Optional<String> approverId,
+            Optional<Integer> canaryPct,
+            String eventType,
+            String detailsJson,
+            String lifecycleReason) {
         boolean updated = policyRepository.updateStatus(
                 current.policyId(),
                 current.version(),
@@ -229,10 +256,10 @@ public class PolicyService {
         }
         recordEvent(current.policyId(), current.version(), eventType, actorId, detailsJson);
         PolicyRecord after = load(current.policyId(), current.version());
-        emitLifecycle(after, actorId, Instant.now());
+        emitLifecycle(after, actorId, Instant.now(), lifecycleReason);
     }
 
-    private void emitLifecycle(PolicyRecord record, String actor, Instant occurredAt) {
+    private void emitLifecycle(PolicyRecord record, String actor, Instant occurredAt, String reason) {
         outboxWriter.enqueueLifecycleEvent(new PolicyLifecycleEvent(
                 record.policyId(),
                 record.version(),
@@ -240,6 +267,7 @@ public class PolicyService {
                 record.status().name(),
                 record.canaryPct().orElse(null),
                 actor,
+                reason,
                 occurredAt,
                 PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 record.yaml()));

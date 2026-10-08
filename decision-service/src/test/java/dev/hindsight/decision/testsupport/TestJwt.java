@@ -12,6 +12,8 @@ import java.util.List;
 
 public final class TestJwt {
 
+    public static final String GUARDRAIL_SERVICE_SUBJECT = "test-user";
+
     private static final String SECRET = "test-jwt-hmac-secret-32bytes-min!!";
 
     private TestJwt() {}
@@ -19,7 +21,7 @@ public final class TestJwt {
     public static String tokenWithRole(String role) {
         try {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                    .subject("test-user")
+                    .subject(GUARDRAIL_SERVICE_SUBJECT)
                     .issueTime(Date.from(Instant.now()))
                     .claim("roles", List.of(role))
                     .build();

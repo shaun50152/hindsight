@@ -6,6 +6,7 @@ import dev.hindsight.common.events.PolicyLifecycleEvent;
 import dev.hindsight.policy.lifecycle.PolicyStatus;
 import dev.hindsight.policy.testsupport.PostgresTestSupport;
 import dev.hindsight.policy.testsupport.TestPolicyYaml;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,7 +53,7 @@ class PolicyLifecycleOutboxIT {
         policyService.approve(policyId, 2, "checker-2");
         promoteToActive(policyId, 2, "ops-1");
 
-        policyService.rollback(policyId, 2, "ops-1");
+        policyService.rollback(policyId, 2, "ops-1", "approval rate exceeded threshold");
 
         var rows = jdbcTemplate.queryForList(
                 "SELECT message_key, payload::text AS payload FROM outbox WHERE topic = ? ORDER BY created_at",
@@ -78,11 +79,43 @@ class PolicyLifecycleOutboxIT {
                 .findFirst();
         assertThat(restored).isPresent();
         assertThat(restored.get().yaml()).contains("policyId: " + policyId);
+
+        var retiredV2 = rows.stream()
+                .map(r -> {
+                    try {
+                        return JSON.readValue((String) r.get("payload"), PolicyLifecycleEvent.class);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .filter(e -> e.version() == 2 && "RETIRED".equals(e.status()))
+                .findFirst();
+        assertThat(retiredV2).isPresent();
+        assertThat(retiredV2.get().actor()).isEqualTo("ops-1");
+        assertThat(retiredV2.get().reason()).isEqualTo("approval rate exceeded threshold");
+        assertThat(retiredV2.get().schemaVersion()).isEqualTo(PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION);
     }
 
     private void promoteToActive(String policyId, int version, String actor) {
         policyService.promote(policyId, version, PolicyStatus.SHADOW, null, actor);
+        seedCompleteBacktestReport(policyId, version);
         policyService.promote(policyId, version, PolicyStatus.CANARY, 100, actor);
         policyService.promote(policyId, version, PolicyStatus.ACTIVE, null, actor);
+    }
+
+    private void seedCompleteBacktestReport(String policyId, int version) {
+        String contentHash = jdbcTemplate.queryForObject(
+                "SELECT content_hash FROM policies WHERE policy_id = ? AND version = ?",
+                String.class,
+                policyId,
+                version);
+        jdbcTemplate.update(
+                """
+                INSERT INTO backtest_reports (content_hash, backtest_id, status, summary)
+                VALUES (?, ?::uuid, 'COMPLETE', '{}'::jsonb)
+                ON CONFLICT (content_hash) DO UPDATE SET status = 'COMPLETE'
+                """,
+                contentHash,
+                UUID.randomUUID());
     }
 }

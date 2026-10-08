@@ -33,6 +33,7 @@ public final class LifecycleEventPublisher {
                 status,
                 canaryPct,
                 actor,
+                null,
                 Instant.now(),
                 PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 yaml);

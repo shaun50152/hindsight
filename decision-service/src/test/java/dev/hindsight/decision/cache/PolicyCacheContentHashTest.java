@@ -24,8 +24,9 @@ class PolicyCacheContentHashTest {
                 "ACTIVE",
                 null,
                 "ops",
+                null,
                 Instant.now(),
-                1,
+                PolicyLifecycleEvent.CURRENT_SCHEMA_VERSION,
                 yaml));
         assertThat(cache.routeFor("p").active()).isEmpty();
         assertThat(cache.compiledByContentHash(PolicyContentHash.hash(policy))).isEmpty();
