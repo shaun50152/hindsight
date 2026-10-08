@@ -1,0 +1,23 @@
+policyId: credit-line-increase
+version: 7
+description: Raise limit decisions for existing cardholders
+inputs: applicant
+defaultOutcome: REFER
+rules:
+  - id: R1-delinquency
+    when: "applicant.delinquencies12m >= 2"
+    outcome: DECLINE
+    reason: RC_DELINQ
+  - id: R2-high-util
+    when: "applicant.utilization > 0.85 && applicant.tenureMonths < 12"
+    outcome: DECLINE
+    reason: RC_UTIL_NEW
+  - id: R3-strong
+    when: "applicant.ficoBand >= 3 && applicant.utilization < 0.5 && applicant.incomeVerified"
+    outcome: APPROVE
+    reason: RC_STRONG
+    maxIncrease: "min(applicant.currentLimit * 0.25, 5000.0)"
+  - id: R4-large-request
+    when: "applicant.requestedIncrease > 10000.0"
+    outcome: REFER
+    reason: RC_MANUAL

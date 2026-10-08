@@ -9,6 +9,7 @@ dependencyResolutionManagement {
 
 include(
     "common",
+    "policy-engine",
     "policy-service",
     "decision-service",
     "audit-service",

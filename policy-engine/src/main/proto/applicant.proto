@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package dev.hindsight.policyengine.proto;
+
+option java_package = "dev.hindsight.policyengine.proto";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+// Typed CEL input for policy rule expressions (field names match the policy DSL).
+message Applicant {
+  string customerId = 1;
+  double currentLimit = 2;
+  double requestedIncrease = 3;
+  double utilization = 4;
+  int32 delinquencies12m = 5;
+  int32 tenureMonths = 6;
+  int32 ficoBand = 7;
+  string incomeBand = 8;
+  bool incomeVerified = 9;
+  string segment = 10;
+  google.protobuf.Timestamp asOf = 11;
+}
