@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+hindsight:
+  jwt:
+    hmac-secret: test-jwt-hmac-secret-32bytes-min!!
+  kafka:
+    enabled: false
+  outbox:
+    relay-enabled: false

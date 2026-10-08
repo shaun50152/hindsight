@@ -1,0 +1,13 @@
+# Dev profile: JWT HMAC secret and Kafka from environment only (never commit secrets).
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+hindsight:
+  jwt:
+    hmac-secret: ${HINDSIGHT_JWT_SECRET}
+  kafka:
+    enabled: true
+  outbox:
+    relay-enabled: true

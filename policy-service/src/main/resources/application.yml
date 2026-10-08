@@ -2,14 +2,25 @@ spring:
   application:
     name: policy-service
   datasource:
-    # Defaults match docker-compose.yml for local dev. Override via env in real deploys.
-    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight}
+    url: ${HINDSIGHT_DB_URL:jdbc:postgresql://localhost:5432/hindsight?currentSchema=policy}
     username: ${HINDSIGHT_DB_USER:hindsight}
     password: ${HINDSIGHT_DB_PASSWORD:hindsight}
   flyway:
     schemas: policy
     default-schema: policy
     create-schemas: true
+  kafka:
+    bootstrap-servers: ${HINDSIGHT_KAFKA_BOOTSTRAP:localhost:9092}
+
+hindsight:
+  jwt:
+    hmac-secret: ${HINDSIGHT_JWT_SECRET:}
+  kafka:
+    enabled: true
+  outbox:
+    relay-enabled: true
+    relay-interval-ms: 1000
+    batch-size: 50
 
 management:
   endpoints:
